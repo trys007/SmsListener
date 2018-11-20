@@ -1,0 +1,37 @@
+apply plugin: 'com.android.application'
+
+apply plugin: 'realm-android'
+
+android {
+    compileSdkVersion 26
+    defaultConfig {
+        applicationId "com.sms.listener"
+        minSdkVersion 15
+        targetSdkVersion 26
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        targetCompatibility 1.8
+        sourceCompatibility 1.8
+    }
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation 'com.android.support:appcompat-v7:26.1.0'
+    implementation 'com.android.support.constraint:constraint-layout:1.1.2'
+    implementation 'com.jakewharton.rxbinding2:rxbinding-recyclerview-v7:2.0.0'
+    implementation 'com.squareup.okhttp3:okhttp:3.9.1'
+    implementation 'com.android.support:design:26.1.0'
+}
+repositories {
+    mavenCentral()
+}
