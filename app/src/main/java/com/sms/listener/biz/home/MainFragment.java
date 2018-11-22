@@ -23,6 +23,7 @@ import android.widget.TextView;
 
 import com.sms.listener.R;
 import com.sms.listener.base.BaseFragment;
+import com.sms.listener.biz.detail.PhoneDetailActivity;
 import com.sms.listener.po.SmsMessage;
 import com.sms.listener.service.BaseService;
 
@@ -218,13 +219,19 @@ public class MainFragment extends BaseFragment {
             public TextView smsPhoneTv;
             public TextView smsBodyTv;
             public TextView smsDateTv;
+            public TextView smsStateTv;
 
             public SmsViewHolder(View itemView) {
                 super(itemView);
                 smsPhoneTv = itemView.findViewById(R.id.sms_phone);
                 smsBodyTv = itemView.findViewById(R.id.sms_body);
                 smsDateTv = itemView.findViewById(R.id.sms_date);
-                itemView.setOnClickListener((v -> sendMsg()));
+                smsStateTv = itemView.findViewById(R.id.sms_state);
+                itemView.setOnClickListener((v -> {
+                    Bundle bundle = new Bundle();
+                    bundle.putString(PhoneDetailActivity.PHONE_DETAIL_TITLE, smsMessageList.get(getAdapterPosition()).getSmsPhone());
+                    context.startActivity(PhoneDetailActivity.makeIntent(context, bundle));
+                }));
             }
         }
     }

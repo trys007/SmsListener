@@ -456,7 +456,7 @@ public abstract class ToolbarActivity extends BaseActivity implements View.OnCli
             mToolbar.setBackgroundDrawable(createToolBartDrawable());
         } else {
             //不显示阴影
-            mToolbar.setBackgroundColor(ColorUtils.getColorWithAlpha(alpha, getResources().getColor(R.color.white)));
+            mToolbar.setBackgroundColor(ColorUtils.getColorWithAlpha(alpha, getResources().getColor(R.color.gray)));
         }
         mTitle.setTextColor(ColorUtils.getColorWithAlpha(alpha, getResources().getColor(R.color.textColorPrimary)));
         toolbarBottomLine.setBackgroundColor(ColorUtils.getColorWithAlpha(alpha, getResources().getColor(R.color.gray)));

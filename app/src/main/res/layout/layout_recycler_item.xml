@@ -6,29 +6,52 @@
     android:layout_height="wrap_content"
     android:paddingTop="10dp"
     android:paddingBottom="10dp"
+    android:background="@color/bg_main"
     tools:context="com.sms.listener.biz.home.MainActivity">
-
-    <TextView
-        android:id="@+id/sms_date"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="10dp"
-        android:text="2018-09-07 15:06:23"/>
 
     <TextView
         android:id="@+id/sms_phone"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginLeft="10dp"
-        android:layout_below="@+id/sms_date"
-        android:text="111111111"/>
+        android:text="10069"/>
+
+    <TextView
+        android:id="@+id/sms_state"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginRight="10dp"
+        android:layout_alignParentRight="true"
+        android:text="已接收"/>
 
     <TextView
         android:id="@+id/sms_body"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_toRightOf="@+id/sms_date"
+        android:layout_below="@+id/sms_phone"
         android:layout_marginLeft="10dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginRight="10dp"
         android:text="22222222" />
+
+
+    <TextView
+        android:id="@+id/sms_date"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginRight="10dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="5dp"
+        android:layout_below="@id/sms_body"
+        android:layout_alignParentRight="true"
+        android:text="2018-09-07 15:06:23"/>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_alignParentBottom="true"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:background="@color/gray"/>
 
 </RelativeLayout>
