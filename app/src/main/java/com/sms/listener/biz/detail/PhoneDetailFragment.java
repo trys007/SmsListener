@@ -1,34 +1,24 @@
 package com.sms.listener.biz.detail;
 
-import android.Manifest;
-import android.content.ContentResolver;
+
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.database.Cursor;
-import android.net.Uri;
 import android.os.Bundle;
-import android.provider.Settings;
-import android.support.annotation.NonNull;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
-
 import com.sms.listener.R;
 import com.sms.listener.base.BaseFragment;
-import com.sms.listener.po.SmsMessage;
+import com.sms.listener.biz.db.SmsBean;
 import com.sms.listener.service.BaseService;
-
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+
+import io.realm.Realm;
 
 /**
  * Created by xuzhou on 2018/10/29.
@@ -38,7 +28,8 @@ public class PhoneDetailFragment extends BaseFragment {
 
     RecyclerView recyclerView;
     PhoneDetailAdapter phoneDetailAdapter;
-    List<SmsMessage> dataList;
+    List<SmsBean> dataList;
+    Bundle dataBundle;
 
     @Override
     protected int getLayoutId() {
@@ -58,7 +49,12 @@ public class PhoneDetailFragment extends BaseFragment {
     }
 
     private void initData() {
-
+        dataBundle = getArguments();
+        if(null != dataBundle) {
+            String phone = dataBundle.getString(PhoneDetailActivity.PHONE_DETAIL_TITLE);
+            Realm realm = Realm.getDefaultInstance();
+            dataList = realm.where(SmsBean.class).equalTo("smsPhone", phone).findAll();
+        }
         initRecyclerView();
     }
 
@@ -73,11 +69,11 @@ public class PhoneDetailFragment extends BaseFragment {
 
     class PhoneDetailAdapter extends RecyclerView.Adapter<PhoneDetailAdapter.PhoneDetailViewHolder> {
 
-        private List<SmsMessage> smsMessageList;
+        private List<SmsBean> smsMessageList;
         private Context context;
         private SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
-        public PhoneDetailAdapter(List<SmsMessage> list, Context context) {
+        public PhoneDetailAdapter(List<SmsBean> list, Context context) {
             this.smsMessageList = list;
             this.context = context;
         }
@@ -97,7 +93,7 @@ public class PhoneDetailFragment extends BaseFragment {
 
         @Override
         public int getItemCount() {
-            return smsMessageList.size();
+            return null == smsMessageList ? 0 : smsMessageList.size();
         }
 
         public class PhoneDetailViewHolder extends RecyclerView.ViewHolder {

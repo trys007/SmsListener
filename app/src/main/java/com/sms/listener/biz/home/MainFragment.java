@@ -23,6 +23,7 @@ import android.widget.TextView;
 
 import com.sms.listener.R;
 import com.sms.listener.base.BaseFragment;
+import com.sms.listener.biz.db.SmsBean;
 import com.sms.listener.biz.detail.PhoneDetailActivity;
 import com.sms.listener.po.SmsMessage;
 import com.sms.listener.service.BaseService;
@@ -31,6 +32,9 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+
+import io.realm.Realm;
+import io.realm.Sort;
 
 /**
  * Created by xuzhou on 2018/10/29.
@@ -44,6 +48,7 @@ public class MainFragment extends BaseFragment {
     RecyclerView recyclerView;
     SmsAdapter smsAdapter;
     List<SmsMessage> dataList;
+    List<SmsBean> smsBeanList;
 
     @Override
     protected int getLayoutId() {
@@ -53,13 +58,20 @@ public class MainFragment extends BaseFragment {
     @Override
     protected void initView(View view, Bundle savedInstanceState) {
         recyclerView = view.findViewById(R.id.recycler_view);
-        initData();
+//        initData();
+        loadSms();
     }
 
     public static MainFragment newInstance(Bundle bundle) {
         MainFragment mainFragment = new MainFragment();
         mainFragment.setArguments(bundle);
         return mainFragment;
+    }
+
+    private void loadSms() {
+        Realm realm = Realm.getDefaultInstance();
+        smsBeanList = realm.where(SmsBean.class).sort("date", Sort.DESCENDING).distinct("smsPhone").findAll();
+        initRecyclerView();
     }
 
     private void initData() {
@@ -96,7 +108,7 @@ public class MainFragment extends BaseFragment {
     }
 
     private void initRecyclerView() {
-        smsAdapter = new SmsAdapter(dataList, mActivity);
+        smsAdapter = new SmsAdapter(smsBeanList, mActivity);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(mActivity);
         recyclerView.setLayoutManager(linearLayoutManager);
         recyclerView.setAdapter(smsAdapter);
@@ -187,11 +199,11 @@ public class MainFragment extends BaseFragment {
 
     class SmsAdapter extends RecyclerView.Adapter<SmsAdapter.SmsViewHolder> {
 
-        private List<SmsMessage> smsMessageList;
+        private List<SmsBean> smsMessageList;
         private Context context;
         private SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
-        public SmsAdapter(List<SmsMessage> list, Context context) {
+        public SmsAdapter(List<SmsBean> list, Context context) {
             this.smsMessageList = list;
             this.context = context;
         }
@@ -241,6 +253,30 @@ public class MainFragment extends BaseFragment {
         i.putExtra("S_TYPE", "send");
         i.putExtra("SMS_CONTENT", "13611721323-254386");
         mActivity.startService(i);
+    }
+
+    public void copyToRealm() {
+        if(null == dataList) {
+            return;
+        }
+        Realm realm = Realm.getDefaultInstance();
+        SmsBean smsBean;
+        SmsMessage smsMessage;
+        SmsBean temp;
+        for (int i = 0; i < dataList.size(); i++) {
+            smsMessage = dataList.get(i);
+            temp = realm.where(SmsBean.class).equalTo("smsId", smsMessage.getSmsId()).findFirst();
+            if(null != temp) {
+                continue;
+            }
+            realm.beginTransaction();
+            smsBean = realm.createObject(SmsBean.class);
+            smsBean.setSmsId(smsMessage.getSmsId());
+            smsBean.setSmsPhone(smsMessage.getSmsPhone());
+            smsBean.setSmsBody(smsMessage.getSmsBody());
+            smsBean.setDate(smsMessage.getDate());
+            realm.commitTransaction();
+        }
     }
 
 }
